@@ -1,0 +1,13 @@
+# if present, ignore the configuration file
+config.json
+
+# ignore the venv directory
+venv/
+
+# ignore the .idea folder
+.idea/
+
+# ignore pycache
+__pycache__/
+*.py[cod]
+*$py.class
