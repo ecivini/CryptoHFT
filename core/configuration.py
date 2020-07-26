@@ -40,6 +40,7 @@ class Configuration:
                 self.apiKey = data["apiKey"]
                 self.apiSecret = data["apiSecret"]
                 self.username = data["username"]
+                self.against = data["against"]
 
         # if the configuration file doesn't exist, then stop the execution
         except FileNotFoundError:
@@ -58,12 +59,14 @@ class Configuration:
             apiKey = input("\tAPI Key: ")
             apiSecret = input("\tAPI Secret: ")
             username = input("\tUsername: ")
+            against = input("\tAgainst: [BTC/USDT] ")
 
             # let the user check if the parameters are correct
             print("You have entered: ")
             print("\tAPI Key: " + apiKey)
             print("\tAPI Secret: " + apiSecret)
             print("\tUsername: " + username)
+            print("\tAgainst: " + against)
 
             cmd = input("Are these parameters correct? [y/n] ")
             if cmd == "y" or cmd == "Y":
@@ -75,7 +78,8 @@ class Configuration:
             data = {
                 "apiKey": apiKey,
                 "apiSecret": apiSecret,
-                "username": username
+                "username": username,
+                "against": against
             }
 
             # write the configuration file

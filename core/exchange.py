@@ -28,6 +28,7 @@ from binance.client import Client
 
 # CORE IMPORTS
 from core.configuration import Configuration
+from core.pair import Pair
 
 ###############################################################################
 
@@ -35,6 +36,9 @@ class Exchange:
 
     # CONSTRUCTOR
     def __init__(self, config: Configuration):
+        # store the trading configuration
+        self.against = config.against
+
         # try to connect to Binance
         print("[+] Connecting to Binance.")
         self.client = Client(config.apiKey, config.apiSecret)
@@ -46,3 +50,48 @@ class Exchange:
             print("[-] Cannot connect to Binance. Check your internet connection"
                   " and your api parameters.")
             sys.exit(0)
+
+    # METHODS
+    def printAvailablePairs(self) -> None:
+        for pair in self.availablePairs:
+            print("[+] Added " + pair.name + ".")
+
+    def getAvailablePairs(self) -> None:
+        # get a list of all the pairs on binance
+        tickers = self.client.get_all_tickers()
+
+        # create the pairs from the ticker
+        allBinancePairs = []
+        for ticker in tickers:
+            allBinancePairs.append(Pair(ticker["symbol"]))
+
+        # filter function
+        def filterPairByAgainst(pair: Pair) -> bool:
+            againstLen = len(self.against)
+            return pair.name[-againstLen:] == self.against
+
+        # filter the pairs the are not against what the user choose
+        filteredPairsIterator = filter(filterPairByAgainst, allBinancePairs)
+
+        # store the filtered list of pairs
+        self.availablePairs = list(filteredPairsIterator)
+        self.printAvailablePairs()
+
+        # update the members of all the available pairs
+        for pair in self.availablePairs:
+            open = []
+            high = []
+            low = []
+            close = []
+            volume = []
+            for kline in self.client.get_historical_klines_generator(pair.name,
+                                                                    Client.KLINE_INTERVAL_1MINUTE,
+                                                                    "4 hours ago UTC"):
+                open.append(float(kline[1]))
+                high.append(float(kline[2]))
+                low.append(float(kline[3]))
+                close.append(float(kline[4]))
+                volume.append(float(kline[5]))
+
+            pair.updateCandlesticks(open, high, low, close, volume)
+            print("[+] " + pair.name + " updated.")

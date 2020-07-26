@@ -75,6 +75,7 @@ def main() -> None:
     # load the configuration
     userConfig = Configuration(CONFIG_FILE_PATH)
     exchange = Exchange(userConfig)
+    exchange.getAvailablePairs()
 
 ###############################################################################
 
