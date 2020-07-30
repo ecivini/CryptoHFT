@@ -20,48 +20,40 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ###############################################################################
 
-# STANDARD IMPORTS
-from datetime import datetime
-
-# CORE IMPORTS
-from core.pair_data import PairData
-from core.analyzer.trend_analyzer import *
+# 3RD PARTY IMPORTS
+import numpy as np
 
 ###############################################################################
 
-class Pair:
+class PairData:
     # CONSTRUCTOR
-    def __init__(self, name: str):
-        self.name = name
-        self.data = PairData()
-        self.trendAnalyzer = TrendAnalyzer(self.data)
-        self.currentDirection = TrendDirection.USELESS
-        self.usable = True
-        self.timestamp = 0
+    def __init__(self):
+        self.closeTime = np.array([])
+        self.open = np.array([])
+        self.high = np.array([])
+        self.low = np.array([])
+        self.close = np.array([])
+        self.volume = np.array([])
 
     # METHODS
     def updateCandlesticks(self, open: list, high: list,
                            low: list, close: list,
                            volume: list, closeTime: list) -> None:
-        self.data.updateCandlesticks(open, high, low, close, volume, closeTime)
-        self.trendAnalyzer.updatePairData(self.data)
-        self.currentDirection = self.trendAnalyzer.getTrend()
+        self.closeTime = np.array(closeTime)
+        self.open = np.array(open)
+        self.high = np.array(high)
+        self.low = np.array(low)
+        self.close = np.array(close)
+        self.volume = np.array(volume)
 
     def getLastPrice(self) -> None:
         return self.close[0]
 
     def calculateMeanVolume(self) -> float:
-        return self.data.calculateMeanVolume()
+        if len(self.volume) == 0:
+            return 0.0
 
-    def disable(self) -> None:
-        self.usable = False
-        self.timestamp = datetime.now()
-
-    def enable(self, secondInterval: int) -> bool:
-        if not self.usable:
-            if datetime.now() - self.timestamp >= secondInterval:
-                self.usable = True
-                self.timestamp = 0
-                return True
-            return False
-        return True
+        volumeSum = 0.0
+        for v in self.volume:
+            volumeSum += v
+        return volumeSum / len(self.volume)

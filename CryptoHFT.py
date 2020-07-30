@@ -26,7 +26,7 @@ import sys
 
 # CORE IMPORTS
 from core.configuration import Configuration
-from core.exchange import Exchange
+from core.bot import Bot
 
 ###############################################################################
 
@@ -74,8 +74,15 @@ def main() -> None:
 
     # load the configuration
     userConfig = Configuration(CONFIG_FILE_PATH)
-    exchange = Exchange(userConfig)
-    exchange.getAvailablePairs()
+
+    # create the bot object
+    bot = Bot(userConfig)
+
+    # setup the bot
+    bot.setup()
+
+    # enter the trade loop
+    bot.tradeLoop()
 
 ###############################################################################
 

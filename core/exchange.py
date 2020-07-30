@@ -56,7 +56,12 @@ class Exchange:
         for pair in self.availablePairs:
             print("[+] Added " + pair.name + ".")
 
-    def getAvailablePairs(self) -> None:
+    def getLastPrice(self, pair: Pair) -> float:
+        ticker = self.client.get_ticker(symbol=pair.name)
+        return float(ticker["lastPrice"])
+
+    def updateAvailablePairs(self) -> None:
+        print("[+] Updating available pairs.")
         # get a list of all the pairs on binance
         tickers = self.client.get_all_tickers()
 
@@ -65,20 +70,19 @@ class Exchange:
         for ticker in tickers:
             allBinancePairs.append(Pair(ticker["symbol"]))
 
-        # filter function
+        # filter by against function
         def filterPairByAgainst(pair: Pair) -> bool:
             againstLen = len(self.against)
             return pair.name[-againstLen:] == self.against
 
         # filter the pairs the are not against what the user choose
-        filteredPairsIterator = filter(filterPairByAgainst, allBinancePairs)
-
-        # store the filtered list of pairs
-        self.availablePairs = list(filteredPairsIterator)
-        self.printAvailablePairs()
+        filteredPairsAgainstIterator = filter(filterPairByAgainst, allBinancePairs)
+        self.availablePairs =  list(filteredPairsAgainstIterator)
+        #self.printAvailablePairs()
 
         # update the members of all the available pairs
         for pair in self.availablePairs:
+            closeTime = []
             open = []
             high = []
             low = []
@@ -86,12 +90,22 @@ class Exchange:
             volume = []
             for kline in self.client.get_historical_klines_generator(pair.name,
                                                                     Client.KLINE_INTERVAL_1MINUTE,
-                                                                    "4 hours ago UTC"):
+                                                                    "5 hours ago UTC"): # only 4 hours are really needed for now
+                closeTime.append(int(kline[6]))
                 open.append(float(kline[1]))
                 high.append(float(kline[2]))
                 low.append(float(kline[3]))
                 close.append(float(kline[4]))
                 volume.append(float(kline[5]))
 
-            pair.updateCandlesticks(open, high, low, close, volume)
-            print("[+] " + pair.name + " updated.")
+            pair.updateCandlesticks(open, high, low, close, volume, closeTime)
+            pair.enable(60 * 60 * 12) # 12 hours
+
+        # sort by volume function
+        def sortPairByVolume(pair: Pair) -> bool:
+            return pair.calculateMeanVolume() >= 600 * 9000
+
+        # sort by volume
+        self.availablePairs.sort(key=sortPairByVolume)
+
+        print("[+] Pairs updated.")
